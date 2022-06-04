@@ -4,10 +4,15 @@ const resolve = path.resolve;
 const CAPACITOR_CFG_PATH= resolve(__dirname, "patch/ios/App/App/capacitor.config.json");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const pjson = require("./package.json");
-
+const isGithubPageDeployment = process.env.VUE_APP_ENV === "githubPage";
+const plugins = isGithubPageDeployment
+  ? []
+  : [
+    new BundleAnalyzerPlugin(),
+  ];
 
 module.exports = defineConfig({
-  publicPath: process.env.VUE_APP_ENV === "githubPage"
+  publicPath: isGithubPageDeployment
     ? `/${pjson.slug}`
     : "/",
   transpileDependencies: true,
@@ -62,13 +67,9 @@ module.exports = defineConfig({
         alias: {
           "~": resolve(__dirname, "src/"),
           "@": resolve(__dirname, "src/"),
-          "common_js_builtin": path.resolve("node_modules", "common_js_builtin"),
-
         }
       },
-      plugins:[
-        new BundleAnalyzerPlugin()
-      ]
+      plugins,
     };
   },
   css: {
