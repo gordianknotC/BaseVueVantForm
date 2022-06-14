@@ -1,0 +1,5 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target" : { "namespace": "android_app", "package_name": "com.fandream11.app",
+    "sha256_cert_fingerprints": ["58:1D:85:94:90:CE:54:B7:F0:64:24:A9:99:56:58:C4:1D:03:07:69:4C:84:11:C5:1B:99:9C:EB:F3:7B:8A:21"] }
+}]

@@ -1,0 +1,276 @@
+<html>
+<head>
+    <title>Pay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css"
+    >
+    </link>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+    <style>
+        body {
+            max-width: 500px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .serial-number {
+            padding: 30px;
+        }
+
+        .serial-number-label {
+            font-weight: bold;
+            color: #777;
+        }
+
+        .title {
+            color: #000031;
+            font-size: larger;
+            padding: 30px;
+            padding-bottom: 20px;
+        }
+
+        .pay-form {
+            background-color: #ECEFF2;
+        }
+
+        .radio-option {
+            padding: 20px 0px;
+        }
+
+        .header-img {
+            width: 100%;
+            height: 120px;
+        }
+
+        .van-cell__title {
+            padding: 5px 10px;
+            width: 10rem;
+        }
+
+        .van-field__value {
+            padding: 5px 10px;
+            color: #000031;
+            font-weight: bolder;
+            font-size: larger;
+        }
+
+        .van-field__value:first-child {
+            padding: 0;
+            background-color: #fff;
+        }
+
+        .van-radio__icon {
+            right: 0;
+            position: absolute;
+            padding-right: 20px
+        }
+
+        .cards {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .card {
+            width: 82%;
+            border: white 2px solid;
+            border-radius: 10px;
+            margin: 9%;
+        }
+
+        .card-header {
+            margin: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+        }
+
+        .card-divide {
+            height: 2px;
+        }
+
+        .card-body {
+            min-height: 100px;
+            background-color: white;
+        }
+
+        .card-content {
+            padding: 10px;
+
+            color: #aaa;
+            display: block;
+        }
+
+        .img {
+            margin-left: 20px;
+            height: 30px;
+            margin: 30px 0;
+            z-index: 1;
+        }
+
+        .arrow {
+            max-width: 30px;
+            max-height: 30px;
+            opacity: 50%;
+            margin: auto 0;
+        }
+
+        .ways {
+            color: #777;
+            display: inline-flex;
+            padding: 8px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .way-upi {
+            max-width: 50px;
+            max-height: 20px;
+        }
+
+        .footer {
+            height: 50px
+        }
+
+        .active {
+            border: 4px solid #1815b7;
+            border-radius: 5px;
+        }
+
+        .submit {
+
+        }
+    </style>
+</head>
+<body>
+<div id="app-checkout">
+    <van-dialog v-model="show" show-cancel-button show-confirm-button cancel-button-text="cancel"
+                confirm-button-text="confirm" title="enter serial number" @confirm="onConfirm">
+        <van-field
+                class="single-field"
+                v-model="upiId"
+                name="upi_id"
+                label="UPI ID:"
+                label-width="5em"
+        >
+        </van-field>
+    </van-dialog>
+    <van-form class="pay-form" id="payform" ref="myform" @submit="onSubmit" :action="mfi_api_domain+'/process/deposit'"
+              method="post">
+        <van-field
+                class="serial-number"
+                label-class="serial-number-label"
+                v-model="serial_number"
+                name="serial_number"
+                label="ORDER NO."
+                label-width="7em"
+                readonly
+        >
+        </van-field>
+
+        <div class="title">Please choose payment platform</div>
+        <div class="cards">
+            <div v-for="(setting, index) in deposit_rate_setting">
+                <div class="card" v-bind:class="{active: channel_id===setting['id']}"
+                     @click="chooseChannel(setting['id'])">
+                    <div class="card-header">
+
+                        <img class="img" @click="chooseChannel" :id="setting['id']"
+                             :src="mfi_image_domain+'/image/pay/'+setting['channel_name']+'-2.png'"/>
+
+                    </div>
+                    <div class="card-divide"></div>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <div class="ways" v-for="(way) in payment_ways[setting['channel_name']]">
+                                <img class="way-upi" v-if="way==='upi'"
+                                     src="data:image/png;base64,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"
+                                     alt=""/>
+                                <span v-else class="way">
+                                    %%%way%%%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <input type="hidden" name="channel_id" :value="channel_id">
+            <input type="hidden" name="upi_id" :value="upiId">
+            <div style="margin: 16px;">
+                <van-button class="submit" color="#1815b7" round block type="info" native-type="submit"
+                            :disabled="!choosePayment">Confirm Submit
+                </van-button>
+            </div>
+            <div class="footer">
+            </div>
+        </div>
+    </van-form>
+</div>
+<script>
+  const Dialog = vant.Dialog;
+  // 全局注册
+  Vue.use(Dialog);
+  new Vue({
+    el: '#app-checkout',
+    components: {
+      [Dialog.Component.name]: Dialog.Component,
+    },
+    delimiters: ['%%%', '%%%'],
+    data() {
+      return {
+        serial_number: "TU20210507-LRTA9AQSL3",
+        channel_id: null,
+        deposit_rate_setting: [{'id': 41, 'channel_id': 4, 'channel_name': 'upi', 'fixed_fee': '0.00', 'fee_rate': '0.1300', 'weight': '1.00', 'remain': '1000000', 'used': '0', 'percent': 0}, {'id': 43, 'channel_id': 3, 'channel_name': 'paytm', 'fixed_fee': '0.00', 'fee_rate': '0.0236', 'weight': '0.00', 'remain': '100000', 'used': '0', 'percent': 0}, {'id': 130, 'channel_id': 11, 'channel_name': 'mss', 'fixed_fee': '0.00', 'fee_rate': '0.0370', 'weight': '0.00', 'remain': '100000000', 'used': '0', 'percent': 0}],
+        mfi_image_domain: "http://mfivitalapi.fillygaming.com",
+        mfi_api_domain: "http://mfivitalapi.fillygaming.com",
+        activeNames: ['1'],
+        show: false,
+        upiId: "",
+        payment_ways: {
+          "razorpay": ['upi', 'Cards', 'Net Banking', 'Cardless EMI', 'Wallet'],
+          "paytm": ['upi', 'Credit Card', 'Debit Card', 'Net Banking', 'Paytm Wallet'],
+          "cashfree": ['upi', 'Cards', 'Wallets'],
+          "mss": ['upi'],
+        },
+      }
+    },
+    computed: {
+      choosePayment: function () {
+        return this.channel_id !== null
+      },
+    },
+    methods: {
+      chooseChannel: function (channel_id) {
+        console.log(channel_id)
+        this.channel_id = channel_id
+      },
+      onSubmit: function (values) {
+        console.log(values);
+        let channel_name = ""
+        this.deposit_rate_setting.forEach((setting) => {
+          if (setting['id'] === values['channel_id']) channel_name = setting['channel_name']
+        })
+        console.log(channel_name)
+        if (this.channel_id !== null) {
+          if (channel_name === 'mss') {
+            this.show = true
+          } else {
+            document.getElementById('payform').submit()
+          }
+        } else {
+          alert('please choose payment gateway')
+        }
+      },
+      onConfirm: function () {
+        document.getElementById('payform').submit()
+      }
+    }
+  })
+</script>
+</body>
+</html>
